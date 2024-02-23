@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/vmfunc/shizu/pkg/auth"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -23,7 +24,13 @@ func HandleServerConn(nConn net.Conn) {
 	config := &ssh.ServerConfig{
 		PasswordCallback: func(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
 			log.Printf("Login attempt: user=%s, pass=%s\n", c.User(), string(pass))
-			return nil, ssh.ErrNoAuth
+			if auth.ValidateUser(c.User(), string(pass)) {
+				log.Printf("User %s authenticated\n", c.User())
+				return nil, nil
+			} else {
+				log.Printf("User %s non-authenticated: wrong password\n", c.User())
+				return nil, ssh.ErrNoAuth
+			}
 		},
 	}
 
