@@ -4,8 +4,8 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 
-	"github.com/creack/pty"
 	"github.com/vmfunc/shizu/pkg/auth"
 	"github.com/vmfunc/shizu/pkg/shell"
 	"golang.org/x/crypto/ssh"
@@ -45,36 +45,42 @@ func HandleServerConn(nConn net.Conn) {
 		return
 	}
 
-	go ssh.DiscardRequests(reqs)
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	wg.Add(1)
+	go func() {
+		ssh.DiscardRequests(reqs)
+		wg.Done()
+	}()
 
 	for newChannel := range chans {
 		if newChannel.ChannelType() != "session" {
 			newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
 			continue
 		}
-
 		channel, requests, err := newChannel.Accept()
 		if err != nil {
-			log.Printf("Could not accept channel: %s\n", err)
-			continue
-		}
-
-		pty.Open()
-
-		// send true to accept the request
-		_, err = channel.SendRequest("shell", true, nil)
-		if err != nil {
-			log.Printf("Could not send request: %s\n", err)
-			continue
+			log.Fatalf("Could not accept channel: %v", err)
 		}
 
 		go func(in <-chan *ssh.Request) {
 			for req := range in {
-				if req.Type == "shell" && req.WantReply {
-					req.Reply(true, nil)
-					go shell.HandleHoneypotShell(channel)
-				}
+				req.Reply(req.Type == "shell", nil)
 			}
+			wg.Done()
 		}(requests)
+
+		// allocate pty
+
+		wg.Add(2)
+		go func() {
+			defer func() {
+				term := shell.NewShellSession(channel, channel)
+				term.Start()
+				channel.Close()
+				wg.Done()
+			}()
+		}()
 	}
 }

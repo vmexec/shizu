@@ -14,14 +14,13 @@ type ShellSession struct {
 }
 
 func NewShellSession(w io.ReadWriter, s ssh.Channel) *ShellSession {
-	term := term.NewTerminal(w, "")
+	term := term.NewTerminal(w, "> ")
 	return &ShellSession{term: term, s: s}
 }
 
 func (ss *ShellSession) Start() {
-	for {
-		ss.s.Write([]byte("> "))
 
+	for {
 		line, err := ss.term.ReadLine()
 		if err != nil {
 			if err == io.EOF {
