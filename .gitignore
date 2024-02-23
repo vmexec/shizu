@@ -22,3 +22,7 @@ go.work
 
 # shizu bin
 bin/
+
+# config files
+config.json
+users.json
