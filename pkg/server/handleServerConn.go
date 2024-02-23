@@ -5,7 +5,9 @@ import (
 	"net"
 	"os"
 
+	"github.com/creack/pty"
 	"github.com/vmfunc/shizu/pkg/auth"
+	"github.com/vmfunc/shizu/pkg/shell"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -46,6 +48,33 @@ func HandleServerConn(nConn net.Conn) {
 	go ssh.DiscardRequests(reqs)
 
 	for newChannel := range chans {
-		newChannel.Reject(ssh.Prohibited, "no channels allowed")
+		if newChannel.ChannelType() != "session" {
+			newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
+			continue
+		}
+
+		channel, requests, err := newChannel.Accept()
+		if err != nil {
+			log.Printf("Could not accept channel: %s\n", err)
+			continue
+		}
+
+		pty.Open()
+
+		// send true to accept the request
+		_, err = channel.SendRequest("shell", true, nil)
+		if err != nil {
+			log.Printf("Could not send request: %s\n", err)
+			continue
+		}
+
+		go func(in <-chan *ssh.Request) {
+			for req := range in {
+				if req.Type == "shell" && req.WantReply {
+					req.Reply(true, nil)
+					go shell.HandleHoneypotShell(channel)
+				}
+			}
+		}(requests)
 	}
 }
