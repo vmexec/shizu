@@ -19,7 +19,6 @@ func NewShellSession(w io.ReadWriter, s ssh.Channel) *ShellSession {
 }
 
 func (ss *ShellSession) Start() {
-
 	for {
 		line, err := ss.term.ReadLine()
 		if err != nil {
