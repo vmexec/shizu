@@ -12,7 +12,11 @@ import (
 )
 
 func HandleServerConn(nConn net.Conn) {
-	privateKeyPath := os.Getenv("HOME") + "/.ssh/id_rsa"
+	dirname, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	privateKeyPath := dirname + "/.ssh/id_rsa"
 	privateBytes, err := os.ReadFile(privateKeyPath)
 	if err != nil {
 		log.Fatal("Failed to load private key")
@@ -67,7 +71,12 @@ func HandleServerConn(nConn net.Conn) {
 		wg.Add(1)
 		go func(in <-chan *ssh.Request) {
 			for req := range in {
-				req.Reply(req.Type == "shell", nil)
+				switch req.Type {
+				case "shell":
+					req.Reply(true, nil)
+				default:
+					req.Reply(false, nil)
+				}
 			}
 			wg.Done()
 		}(requests)
