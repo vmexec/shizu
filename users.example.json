@@ -1,10 +1,22 @@
 [
     {
-        "username": "changethis",
-        "password": "changethis"
+        "username": "root",
+        "password": "admin"
     },
     {
-        "username": "changethis2",
-        "password": "changethis2"
+        "username": "user",
+        "password": "password"
+    },
+    {
+        "username": "sysadmin",
+        "password": "password"
+    },
+    {
+        "username": "admin",
+        "password": "admin"
+    },
+    {
+        "username": "insert_any_dummy_user",
+        "password": "insert_any_dummy_pwd"
     }
 ]
