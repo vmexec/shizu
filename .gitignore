@@ -26,3 +26,6 @@ bin/
 # config files
 config.json
 users.json
+
+# vscode config files
+.vscode
