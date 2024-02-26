@@ -8,11 +8,11 @@ import (
 )
 
 func main() {
-	listener, err := net.Listen("tcp", "0.0.0.0:2222")
+	listener, err := net.Listen("tcp", "0.0.0.0:22")
 	if err != nil {
-		log.Fatalf("Failed to listen on port 2222: %s\n", err)
+		log.Fatalf("Failed to listen on port 22: %s\n", err)
 	} else {
-		log.Println("Listening on port 2222")
+		log.Println("Listening on port 22....")
 	}
 
 	for {
