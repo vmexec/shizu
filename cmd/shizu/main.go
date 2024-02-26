@@ -3,16 +3,23 @@ package main
 import (
 	"log"
 	"net"
+	"strconv"
 
+	"github.com/vmfunc/shizu/pkg/config"
 	"github.com/vmfunc/shizu/pkg/server"
 )
 
 func main() {
-	listener, err := net.Listen("tcp", "0.0.0.0:2222")
+	config, err := config.LoadConfigFromFile("config.json")
 	if err != nil {
-		log.Fatalf("Failed to listen on port 2222: %s\n", err)
+		log.Fatalf("Failed to load config: %s\n", err)
+	}
+
+	listener, err := net.Listen("tcp", "0.0.0.0:"+strconv.Itoa(config.Port))
+	if err != nil {
+		log.Fatalf("Failed to listen on port %d: %s\n", config.Port, err)
 	} else {
-		log.Println("Listening on port 2222")
+		log.Printf("Listening on port %d\n", config.Port)
 	}
 
 	for {
