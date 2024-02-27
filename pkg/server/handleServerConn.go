@@ -68,26 +68,27 @@ func HandleServerConn(nConn net.Conn) {
 			log.Fatalf("Could not accept channel: %v", err)
 		}
 
-		wg.Add(1)
 		go func(in <-chan *ssh.Request) {
 			for req := range in {
 				switch req.Type {
 				case "shell":
+					// Respond positively to shell requests
+					req.Reply(true, nil)
+				case "pty-req":
+					// Accept PTY requests (this should work)
 					req.Reply(true, nil)
 				default:
 					req.Reply(false, nil)
 				}
 			}
-			wg.Done()
 		}(requests)
 
-		wg.Add(1)
+		// Start shell session
 		go func() {
 			defer func() {
 				term := shell.NewShellSession(channel, channel)
 				term.Start()
 				channel.Close()
-				wg.Done()
 			}()
 		}()
 	}
